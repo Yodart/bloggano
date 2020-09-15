@@ -22,13 +22,12 @@ def require_auth_token(f):
         try:
             data = jwt.decode(token, 'secret')
             db_cursor.execute(
-                "SELECT id,name,last_name,user_number,balance FROM users WHERE user_number=%s", ([data['user_number']]))
+                "SELECT id, username,articles_count, joined  FROM users WHERE username=%s", ([data['username']]))
             user_data = db_cursor.fetchall()[0]
             user = {'id': user_data[0],
-                    'name': user_data[1],
-                    'last_name': user_data[2],
-                    'user_number': user_data[3],
-                    'balance': user_data[4]}
+                    'username': user_data[1],
+                    'articles_count': user_data[2],
+                    'joined': user_data[3]}
         except:
             return jsonify({'error': 'Invalid auth token.'}), 401
         return f(user, *args, **kwargs)
@@ -44,18 +43,17 @@ def login(db_cursor, db_connection):
 
     try:
         db_cursor.execute(
-            "SELECT id,name,last_name,user_number,balance,password FROM users WHERE user_number=%s", ([auth.username]))
+            "SELECT id, username,articles_count, joined,password  FROM users WHERE username=%s", ([auth.username]))
         user_data = db_cursor.fetchall()[0]
         user = {'id': user_data[0],
-                'name': user_data[1],
-                'last_name': user_data[2],
-                'user_number': user_data[3],
-                'balance': user_data[4],
-                'password': user_data[5]}
+                'username': user_data[1],
+                'articles_count': user_data[2],
+                'joined': user_data[3],
+                'password': user_data[4]}
 
         if check_password_hash(user['password'], auth.password):
             token = jwt.encode(
-                {'user_number': user['user_number'], 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30)}, 'secret')
+                {'username': user['username'], 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30)}, 'secret')
             return jsonify({'token': token.decode('UTF-8')}), 200
 
         return {'message': "Wrong Password"}, 401

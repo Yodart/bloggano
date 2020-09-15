@@ -15,34 +15,31 @@ users = Blueprint('users', __name__)
 def create_user(db_cursor, db_connection):
     hashed_password = generate_password_hash(
         request.json['password'], method='sha256')
-    user_number = request.json['user_number']
-    name = request.json['name']
-    last_name = request.json['last_name']
-
+    username = request.json['username']
     try:
         db_cursor.execute(
-            "SELECT id,name,last_name,user_number,balance FROM users WHERE user_number=%s", ([user_number]))
+            "SELECT username,password FROM users WHERE username=%s", ([username]))
         user_data = db_cursor.fetchall()[0]
-        return jsonify({'error': 'user number belongs to another user'}), 401
+        return jsonify({'error': 'username taken.'}), 401
     except:
         try:
             db_cursor.execute(
-                "INSERT INTO users (name,last_name,password,user_number) values(%s,%s,%s,%s)", (name, last_name, hashed_password, user_number))
+                "INSERT INTO users (username,password) values(%s,%s)", (username, hashed_password))
             db_connection.commit()
-            return jsonify({'message': 'user Created!'}), 401
+            return jsonify({'message': 'user Created!'}), 200
         except:
             return {'error': "Unable to create user", "traceback": str(sys.exc_info())}, 401
 
 
-@ users.route('/user/<int:acc_number>', methods=['GET'])
+@ users.route('/user/<int:user_id>', methods=['GET'])
 @db_connect
 @require_auth_token
-def query_single_user(current_user, db_cursor, db_connection, acc_number):
-    if current_user['user_number'] != acc_number:
+def query_single_user(current_user, db_cursor, db_connection, user_id):
+    if current_user['id'] != user_id:
         return jsonify({"error": "Sensity user data, please log into the user"}), 401
     try:
         db_cursor.execute(
-            "SELECT id,name,last_name,user_number,balance FROM users WHERE user_number=%s", ([acc_number]))
+            "SELECT id,name,last_name,user_number,balance FROM users WHERE user_number=%s", ([user_id]))
         user_data = db_cursor.fetchall()[0]
         return {'id': user_data[0],
                 'name': user_data[1],
