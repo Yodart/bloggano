@@ -7,5 +7,6 @@ def db_connect(f):
     def decorated(*args, **kwargs):
         db_connection = psycopg2.connect(database='blogganodb')
         db_cursor = db_connection.cursor()
+        db_connection.rollback()
         return f(db_cursor, db_connection, *args, **kwargs)
     return decorated
