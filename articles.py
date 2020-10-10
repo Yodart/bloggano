@@ -14,7 +14,7 @@ articles = Blueprint('articles', __name__)
 @db_connect
 @require_auth_token
 def create_article(current_account, db_cursor, db_connection):
-    account_number = request.json['account_number']
+    creator = current_account['username']
     ammount = request.json['ammount']
     try:
         db_cursor.execute(
